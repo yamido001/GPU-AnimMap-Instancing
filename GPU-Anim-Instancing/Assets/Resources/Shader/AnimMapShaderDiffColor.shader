@@ -1,9 +1,12 @@
-﻿Shader "Custom/AnimMapShader"
+﻿// Upgrade NOTE: replaced 'UNITY_INSTANCE_ID' with 'UNITY_VERTEX_INPUT_INSTANCE_ID'
+
+Shader "Custom/AnimMapShaderDiffColor"
 {
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 		_AnimMap ("AnimMap", 2D) ="white" {}
+		_BlendColor ("_BlendColor", Color) = (1, 1, 1, 1)
 		_AnimLen("Anim Length", Float) = 0
 	}
 		SubShader
@@ -44,6 +47,9 @@
 
 			float _AnimLen;
 
+			UNITY_INSTANCING_CBUFFER_START (MyProperties)
+            UNITY_DEFINE_INSTANCED_PROP (float4, _BlendColor)
+            UNITY_INSTANCING_CBUFFER_END
 			
 			v2f vert (appdata v, uint vid : SV_VertexID)
 			{
@@ -59,6 +65,7 @@
 				float4 pos = tex2Dlod(_AnimMap, float4(animMap_x, animMap_y, 0, 0));
 
 				v2f o;
+				UNITY_TRANSFER_INSTANCE_ID (v, o);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.vertex = UnityObjectToClipPos(pos);
 				return o;
@@ -66,8 +73,13 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
+				UNITY_SETUP_INSTANCE_ID (i);
+				fixed4 blendCol = UNITY_ACCESS_INSTANCED_PROP (_BlendColor);
 				fixed4 col = tex2D(_MainTex, i.uv);
-				return col;
+				return col * (1 - blendCol.a) + blendCol * blendCol.a;
+
+//				fixed4 col = tex2D(_MainTex, i.uv);
+//				return col;
 			}
 			ENDCG
 		}

@@ -36,8 +36,9 @@ public class AniMapInstance : MonoBehaviour {
 		if (!CheckData ()) {
 			return;
 		}
-
-//		MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock ();
+		#if Instancing
+		MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock ();
+		#endif
 		for (int i = 0; i < xCount; ++i) {
 			for (int j = 0; j < yCount; ++j) {
 				GameObject childPrefab = GetRandomPrefab();
@@ -47,10 +48,15 @@ public class AniMapInstance : MonoBehaviour {
 				float xPos = (i - xCount / 2) * xInterval;
 				float zPos = (j - yCount / 2) * yInterval;
 				childPrefab.transform.localPosition = new Vector3 (xPos, 0f, zPos);
-				//				MeshRenderer render = childPrefab.GetComponent<MeshRenderer> ();
-				//
-				//				propertyBlock.SetColor ("_ReplaceColor", new Color (Random.Range (0f, 1f), Random.Range (0f, 1f), Random.Range (0f, 1f)));
-				//				render.SetPropertyBlock (propertyBlock);
+
+				#if Instancing
+				MeshRenderer render = childPrefab.GetComponent<MeshRenderer> ();
+				float r = (float)i / xCount;
+				float g = (float)j / yCount;
+				float b = r * g;
+				propertyBlock.SetColor ("_BlendColor", new Color (r,g,b, 0.2f));
+				render.SetPropertyBlock (propertyBlock);
+				#endif
 			}
 		}
 	}
